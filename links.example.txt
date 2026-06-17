@@ -1,0 +1,22 @@
+# links.example.txt — archivo de links para yt-links-mp3
+#
+# Reglas:
+#   - Una URL por línea
+#   - Líneas que empiezan con # o // son comentarios (se ignoran)
+#   - Líneas vacías se ignoran
+#   - Acepta URL completa, youtu.be/<id>, o solo el ID de 11 caracteres
+#   - Texto después de la URL se guarda como descripción opcional
+#   - URLs duplicadas se deduplican automáticamente
+#
+# Reemplazá estos ejemplos con tus propios links.
+
+# --- Singles sueltos ---
+https://www.youtube.com/watch?v=dQw4w9WgXcQ
+https://youtu.be/jNQXAC9IVRw                          Rick Astley
+https://www.youtube.com/watch?v=9bZkp7q19f0           PSY - Gangnam Style
+
+# --- Live sets ---
+https://www.youtube.com/watch?v=4xDzrJKXOOY           Boiler Room mix
+
+# --- ID solo (también válido) ---
+jNQXAC9IVRw                                            # dedupe de arriba, se ignora

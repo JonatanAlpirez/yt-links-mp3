@@ -1,8 +1,8 @@
-# yt-playlist-mp3 — example config
-# Copia este archivo a ~/.config/yt-playlist-mp3/config.yaml o a ./config.yaml
+# yt-links-mp3 — example config
+# Copia este archivo a ~/.config/yt-links-mp3/config.yaml o a ./config.yaml
 
 # Carpeta de salida
-output_dir: ~/Music/Playlists
+output_dir: ~/Music/Downloads
 
 # Formato y calidad de audio
 audio_format: mp3
@@ -18,5 +18,9 @@ dry_run: false
 embed_metadata: true
 embed_thumbnail: true
 
-# Plantilla de nombre (placeholders: artist, title, album, track_number, playlist, ext)
-filename_template: "{playlist}/{track_number:02d} - {artist} - {title}.{ext}"
+# Plantilla de nombre (placeholders: artist, title, album, track_number, ext)
+filename_template: "{artist}/{album}/{track_number:02d} - {title}.{ext}"
+
+# Archivo de links fallidos (auto-generado cuando algo falla)
+# Útil para reintentar: yt-links-mp3 download links.txt.failed
+failed_filename: "links.txt.failed"
