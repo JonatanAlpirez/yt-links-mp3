@@ -13,6 +13,8 @@ Descargador de música desde YouTube a partir de un **archivo de texto con URLs*
 - Convierte cada video a MP3 con `yt-dlp` + `ffmpeg` a 320 kbps (CBR) por defecto.
 - Modo dry-run para previsualizar sin escribir a disco.
 - Auto-reanudación: si un link falla, se escribe a `links.txt.failed` para reintentar.
+- Reintentos automáticos con backoff exponencial (1s, 5s, 15s por defecto) en errores de red. Errores permanentes (video privado, eliminado, 404, age-restricted) no se reintentan.
+- Concurrencia configurable (default: 3 workers en paralelo).
 - Configuración por archivo YAML.
 
 Roadmap y features pendientes: ver [`PLAN.md`](./PLAN.md).
@@ -162,6 +164,9 @@ yt-links-mp3 download ~/Music/links.txt --force
 # Concurrencia (default: 3)
 yt-links-mp3 download ~/Music/links.txt --concurrency 5
 
+# Reintentos en errores transitorios (default: 3 con backoff 1s, 5s, 15s)
+# Configurable vía config.yaml: max_retries, retry_backoff_base
+
 # Reintentar solo los que fallaron la vez pasada
 yt-links-mp3 download ~/Music/links.txt.failed
 ```
@@ -182,6 +187,13 @@ audio_quality: 320  # kbps — máximo para MP3 (CBR)
 concurrency: 3
 force: false
 dry_run: false
+
+# Reintentos en errores transitorios (network, 5xx, timeout).
+# Errores permanentes (404, privado, eliminado, age-restricted) no se reintentan.
+max_retries: 3
+# Backoff exponencial en segundos: base * 5^(attempt-1).
+# Default 1.0 → 1s, 5s, 15s entre intentos.
+retry_backoff_base: 1.0
 
 # Portada embebida en el MP3 (ID3v2.4 cover art)
 embed_thumbnail: true
@@ -267,7 +279,7 @@ pytest                              # corre todos los tests
 pytest tests/test_linklist.py -v    # solo el parser de links
 ```
 
-Estado actual: **63/63 tests pasando** (`test_linklist.py` parser, `test_metadata.py` limpieza y extracción, `test_paths.py` sanitización y naming).
+Estado actual: **86/86 tests pasando** (`test_linklist.py` parser, `test_metadata.py` limpieza y extracción, `test_paths.py` sanitización y naming, `test_config.py` carga de YAML, `test_downloader.py` retry y concurrencia).
 
 ---
 

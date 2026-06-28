@@ -16,6 +16,12 @@ class Config(BaseModel):
     audio_format: str = "mp3"
     audio_quality: int = 320  # kbps — máximo para MP3 (CBR)
     concurrency: int = 3
+    # Reintentos en errores transitorios (network, 5xx, timeout).
+    # Errores permanentes (404, privado, eliminado, age-restricted) no se reintentan.
+    max_retries: int = 3
+    # Base del backoff exponencial (segundos). Backoffs: base * 5^(attempt-1)
+    # Default 1.0 → 1s, 5s, 15s.
+    retry_backoff_base: float = 1.0
     skip_existing: bool = True
     force: bool = False
     dry_run: bool = False

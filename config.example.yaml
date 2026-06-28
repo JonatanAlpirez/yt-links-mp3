@@ -13,6 +13,13 @@ concurrency: 3
 force: false
 dry_run: false
 
+# Reintentos en errores transitorios (network, 5xx, timeout).
+# Errores permanentes (404, privado, eliminado, age-restricted) no se reintentan.
+max_retries: 3
+# Backoff exponencial en segundos: base * 5^(attempt-1).
+# Default 1.0 → 1s, 5s, 15s entre intentos.
+retry_backoff_base: 1.0
+
 # Portada embebida en el MP3 (ID3v2.4 cover art)
 embed_thumbnail: true
 

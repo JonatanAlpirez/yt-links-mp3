@@ -180,13 +180,13 @@ https://www.youtube.com/watch?v=4xDzrJKXOOY   Boiler Room (mezcla 1h)
 
 ### Fase 3 — Robustez (2–3h)
 
-- [ ] Reintentos: 3 intentos con backoff exponencial (1s, 5s, 15s) en errores transitorios (network, 5xx). No reintentar en errores permanentes (404, privado).
-- [ ] Concurrencia real: activar `ThreadPoolExecutor` en `cli.download()` (ya existe `download_all()`, falta reemplazar el loop secuencial).
-- [ ] `--concurrency N` ya disponible; verificar que funcione con paralelización real.
-- [ ] Resumen final: N exitosos, M skip (ya existentes), K fallidos → escribe `links.txt.failed`.
-- [ ] Al terminar, si hubo fallos, sugiere: `yt-links-mp3 download links.txt.failed`.
+- [x] Reintentos: 3 intentos con backoff exponencial (1s, 5s, 15s por defecto) en errores transitorios (network, 5xx). No reintentar en errores permanentes (404, privado, eliminado, age-restricted).
+- [x] Concurrencia real: `download_all()` usa `ThreadPoolExecutor` con `config.concurrency` workers. CLI usa `download_all()` en lugar de loop secuencial.
+- [x] `--concurrency N` funciona end-to-end (default: 3).
+- [x] Resumen final: N exitosos, M skip, K fallidos, R requirieron retry. Escribe `links.txt.failed` si hay fallos.
+- [x] Sugerencia al usuario: `yt-links-mp3 download links.txt.failed`.
 
-**Criterio de aceptación:** un archivo con 50 links, 2 privados y 1 roto, termina con 47 archivos descargados, 0 skip, 3 en `links.txt.failed`. Reintentá los fallidos con `yt-links-mp3 download links.txt.failed`. Una corrida posterior sobre el mismo `links.txt` muestra los 47 como skip.
+**Criterio de aceptación:** un archivo con 50 links, 2 privados y 1 roto, termina con 47 archivos descargados, 0 skip, 3 en `links.txt.failed`. Errores permanentes (privado) NO se reintentan — fallan al primer intento. Reintentá los fallidos con `yt-links-mp3 download links.txt.failed`. Una corrida posterior sobre el mismo `links.txt` muestra los 47 como skip.
 
 ### Fase 4 — Calidad y DX (2–3h)
 
@@ -302,8 +302,8 @@ yt-links-mp3 download ~/Music/links.txt.failed  # reintenta esos
 
 ## 🚦 Estado actual
 
-**Fase:** 2 — Metadatos y naming ✅ (naming por metadata, cover embebido, skip-existing)
-**Próximo paso:** Fase 3 — Robustez (reintentos con backoff, concurrencia real)
+**Fase:** 3 — Robustez ✅ (reintentos con backoff, concurrencia real, skip explícito)
+**Próximo paso:** Fase 4 — Calidad y DX (tests, CI, Makefile, comando `info`)
 
 ### Lo que funciona hoy
 - `yt-links-mp3 validate <archivo.txt>` → cuenta links válidos y reporta líneas ignoradas
@@ -316,7 +316,7 @@ yt-links-mp3 download ~/Music/links.txt.failed  # reintenta esos
 - Títulos limpios automáticamente (regex borra `Official Video`, `HD`, `(Lyric)`, etc.)
 - Skip automático: si el archivo final ya existe, no se re-descarga. `--force` para ignorar skip.
 - Override de metadatos vía hint en `links.txt` (formato `Artist - Title` o `Artist/Title`)
-- Tests: 63/63 pasando
+- Tests: 86/86 pasando
 
 ### Notas operativas
 - **Python 3.11 disponible** vía Homebrew (`/opt/homebrew/bin/python3.11`). `pyproject.toml` declara `>=3.9`.

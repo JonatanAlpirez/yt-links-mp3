@@ -75,23 +75,24 @@ def download(
             logger.info(f"  - {e.url}  ({e.description or 'sin descripción'})")
         return
 
+    from .downloader import download_all
+
+    logger.info(f"Descargando con concurrencia={config.concurrency}")
     with progress_bar(result.total, description="Descargando") as progress:
         task_id = progress.tasks[0].id
-        results = []
-        from .downloader import download_one
-
-        for idx, entry in enumerate(result.entries, start=1):
-            r = download_one(entry, config, track_number=idx)
-            results.append(r)
-            progress.update(task_id, advance=1)
+        results = download_all(result.entries, config)
+        progress.update(task_id, completed=result.total)
 
     success = sum(1 for r in results if r.success and not r.skipped)
     skipped = sum(1 for r in results if r.skipped)
     failed = [r for r in results if not r.success]
+    retries = sum(r.attempts - 1 for r in results if r.success and r.attempts > 1)
 
     parts = [f"✅ {success} descargados"]
     if skipped:
         parts.append(f"⏭️  {skipped} ya existían")
+    if retries:
+        parts.append(f"🔄 {retries} requirieron retry")
     logger.info(", ".join(parts))
 
     if failed:
