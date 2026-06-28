@@ -1,39 +1,21 @@
 # 🎵 yt-links-mp3
 
-Descargador de música desde YouTube a partir de un **archivo de texto con URLs** (una por línea). Convierte cada video a MP3 con metadatos limpios y una estructura de carpetas ordenada por artista/álbum.
+Descargador de música desde YouTube a partir de un **archivo de texto con URLs** (una por línea). Convierte cada video a MP3 con `yt-dlp` + `ffmpeg`.
 
 > Pensado para uso personal: vos armás una lista curada de links en un `.txt`, y la herramienta los descarga uno a uno. Sin login, sin scraping de playlist, sin sorpresas.
 
 ---
 
-## 🚧 Estado actual
+## ✨ Características
 
-**Fase 1 — MVP funcional** ✅
+- Lee un archivo de texto con URLs de videos individuales de YouTube (uno por línea).
+- Parser tolerante: comentarios (`#`, `//`), líneas vacías, IDs solos (`dQw4w9WgXcQ`), dedupe automático.
+- Convierte cada video a MP3 con `yt-dlp` + `ffmpeg` a 320 kbps (CBR) por defecto.
+- Modo dry-run para previsualizar sin escribir a disco.
+- Auto-reanudación: si un link falla, se escribe a `links.txt.failed` para reintentar.
+- Configuración por archivo YAML.
 
-Lo que funciona hoy:
-- Parser tolerante de archivos de links (comentarios, líneas vacías, IDs solos, dedupe).
-- `yt-links-mp3 validate <archivo>` — preflight sin descargar.
-- `yt-links-mp3 download <archivo>` — descarga con barra de progreso, log de fallos, y `links.txt.failed` para reintentar.
-- `yt-links-mp3 download --dry-run` — preview sin tocar disco.
-- 9/9 tests pasando.
-
-**Próximo:** Fase 2 — metadatos ricos, portadas embebidas, estructura de carpetas por artista/álbum (hoy los MP3s salen flat como `<video_id>.mp3`).
-
-Ver [`PLAN.md`](./PLAN.md) para el roadmap completo y el detalle de qué viene en cada fase.
-
----
-
-## ✨ Características (planeadas y en desarrollo)
-
-- Lee un archivo de texto con URLs de videos individuales (uno por línea).
-- Tolera comentarios (`#`, `//`), líneas vacías, IDs solos (`dQw4w9WgXcQ`), y dedupe automático.
-- Convierte cada video a MP3 con metadatos limpios: título, artista, álbum, número de pista, año, portada. *(metadatos completos llegan en Fase 2)*
-- Nombra los archivos con un patrón consistente (basado en metadatos, no en el título del video). *(llega en Fase 2)*
-- Maneja duplicados y re-descargas (skip si ya existe con la misma calidad). *(skip_existing en config, lógica llega en Fase 3)*
-- Concurrencia configurable para acelerar la descarga. *(config disponible, ejecución secuencial por ahora)*
-- Progreso por video y progreso global del batch.
-- Modo dry-run para previsualizar qué se descargaría sin tocar disco.
-- Auto-reanudación: si fallan links, los escribe a `links.txt.failed` para reintentar. *(esqueleto funcionando, refinamiento en Fase 3)*
+Roadmap y features pendientes: ver [`PLAN.md`](./PLAN.md).
 
 ---
 
@@ -45,7 +27,7 @@ Ver [`PLAN.md`](./PLAN.md) para el roadmap completo y el detalle de qué viene e
 | Extracción de audio   | `ffmpeg`                                  | Estándar de facto para muxing/conversión.                               |
 | Lenguaje              | Python 3.9+ (probado en 3.11; 3.9 deprecado por yt-dlp) | Ecosistema, scripts, CLI limpio. |
 | CLI                   | [`click`](https://palletsprojects.com/p/click/) | Argumentos tipados, subcomandos, experiencia pro.                     |
-| Config                | `pydantic-settings` + YAML               | Validación + archivo de config legible.                                |
+| Config                | `pydantic` + YAML                        | Validación + archivo de config legible.                                |
 | Logging               | `loguru`                                  | Salida colorida en consola + archivo rotado.                            |
 | Progreso              | `rich`                                    | Barras de progreso y tablas bonitas.                                    |
 | Tests                 | `pytest`                                  | Estándar del ecosistema.                                                |
@@ -184,16 +166,6 @@ yt-links-mp3 download ~/Music/links.txt --concurrency 5
 yt-links-mp3 download ~/Music/links.txt.failed
 ```
 
-### 4. Ver metadata sin descargar
-
-```bash
-# De un solo link
-yt-links-mp3 info "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-
-# De un archivo completo (tabla con todos)
-yt-links-mp3 info ~/Music/links.txt
-```
-
 ---
 
 ## ⚙️ Configuración (`config.yaml`)
@@ -208,35 +180,21 @@ audio_quality: 320  # kbps — máximo para MP3 (CBR)
 
 # Descarga
 concurrency: 3
-skip_existing: true
 force: false
 dry_run: false
-
-# Metadatos
-embed_metadata: true
-embed_thumbnail: true
-
-# Plantilla de nombre (placeholders: artist, title, album, track_number, ext)
-filename_template: "{artist}/{album}/{track_number:02d} - {title}.{ext}"
 ```
 
 ---
 
 ## 📁 Estructura resultante
 
+Por defecto los archivos se guardan en `~/Music/Downloads/` con el nombre `<video_id>.mp3`:
+
 ```
 ~/Music/Downloads/
-├── Rick Astley/
-│   └── Whenever You Need Somebody/
-│       ├── cover.jpg
-│       ├── 01 - Never Gonna Give You Up.mp3
-│       └── 02 - Together Forever.mp3
-├── PSY/
-│   └── Single/
-│       └── 01 - Gangnam Style.mp3
-└── Luis Fonsi/
-    └── Single/
-        └── 01 - Despacito.mp3
+├── dQw4w9WgXcQ.mp3
+├── jNQXAC9IVRw.mp3
+└── 9bZkp7q19f0.mp3
 ```
 
 ---
@@ -254,7 +212,7 @@ yt-links-mp3 download ~/Music/links.txt
 # Días siguientes: agregás más links y volvés a correr
 vim ~/Music/links.txt
 yt-links-mp3 download ~/Music/links.txt
-# → skip automático de los que ya están descargados
+# → con --force para re-descargar todo, o sin él para respetar lo que ya está
 
 # Si algo falló (video privado, geo-block, etc.):
 cat ~/Music/links.txt.failed     # solo los que fallaron
