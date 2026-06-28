@@ -12,7 +12,7 @@ class Config(BaseModel):
 
     output_dir: Path = Field(default=Path.home() / "Music" / "Downloads")
     audio_format: str = "mp3"
-    audio_quality: int = 192
+    audio_quality: int = 320  # kbps — máximo para MP3 (CBR)
     concurrency: int = 3
     skip_existing: bool = True
     force: bool = False

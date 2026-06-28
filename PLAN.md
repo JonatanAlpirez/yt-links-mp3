@@ -1,7 +1,5 @@
 # PLAN.md — yt-links-mp3
 
-> **Rename note:** Este proyecto nació como `yt-playlist-mp3` (URL de playlist de YouTube). Se refactoriza a un modelo más simple y flexible: **un archivo de texto con URLs de videos individuales** (uno por línea). Sin login, sin scraping de playlist, sin paginación.
-
 Plan de implementación por fases, pensado para entregar valor temprano y validar las decisiones de diseño antes de escalar.
 
 ---
@@ -9,23 +7,6 @@ Plan de implementación por fases, pensado para entregar valor temprano y valida
 ## 🎯 Objetivo
 
 Construir una herramienta CLI que lea un archivo de texto con URLs de videos individuales de YouTube (uno por línea) y descargue cada uno como MP3 con metadatos limpios, portada embebida y una estructura de carpetas ordenada por artista/álbum.
-
----
-
-## 💡 Por qué cambiar el modelo de entrada
-
-| Aspecto | Antes (playlist URL) | Ahora (archivo de links) |
-|---|---|---|
-| **Fuente** | Una sola URL de playlist | Archivo `.txt` editable a mano |
-| **Orden** | Fijo (el de YouTube) | El que el usuario decida en el archivo |
-| **Mezcla de fuentes** | Solo una playlist | Mezclar canales, mixes, singles, etc. |
-| **Curación** | Implícita (lo que haya en YT) | Explícita (vos elegís cada link) |
-| **Persistencia** | La playlist puede borrarse en YT | El archivo `.txt` es tuyo, local |
-| **Privacidad** | Playlist pública requerida | Cualquier video funciona |
-| **Fricción de uso** | Tener que buscar playlist | Editar un `.txt` con tus links |
-| **Idempotencia** | Re-descarga todo | Podés comentar líneas con `#` |
-
-**Analogía:** en lugar de pedirle a YouTube "dame todos los videos de esta lista", le das vos mismo una lista curada a la herramienta. Es el mismo patrón que `mpv` con una playlist local, o `youtube-dl --batch-file` clásico.
 
 ---
 
@@ -58,19 +39,16 @@ yt-links-mp3/
 │       ├── __init__.py
 │       ├── cli.py              # entrypoint click (comandos: download, info, validate)
 │       ├── config.py           # pydantic-settings
-│       ├── linklist.py         # ⭐ NUEVO: parser del archivo de URLs
-│       ├── downloader.py       # orquesta descargas concurrentes
-│       ├── metadata.py         # parseo/normalización de metadatos
-│       ├── postprocess.py      # ffmpeg + embebido de metadatos/portada
+│       ├── linklist.py         # parser del archivo de URLs
+│       ├── downloader.py       # orquesta descargas (ThreadPoolExecutor)
 │       ├── paths.py            # plantillas de paths seguros (sanitización)
 │       ├── progress.py         # barras rich
 │       └── logging.py          # loguru config
 └── tests/
-    ├── test_linklist.py        # ⭐ NUEVO
-    ├── test_metadata.py
-    ├── test_paths.py
-    └── test_postprocess.py
+    └── test_linklist.py        # parser de links
 ```
+
+> Los módulos `metadata.py` y `postprocess.py` se agregarán en Fase 2.
 
 ### Flujo de datos
 
@@ -147,8 +125,8 @@ https://www.youtube.com/watch?v=4xDzrJKXOOY   Boiler Room (mezcla 1h)
 - [x] `pyproject.toml` con deps: `yt-dlp`, `click`, `pydantic`, `pyyaml`, `loguru`, `rich`
 - [x] Estructura de carpetas `src/` y `tests/`
 - [x] `config.example.yaml` y `links.example.txt`
-- [x] Repo remoto renombrado: `youtube-to-mp3-bydevie` → `yt-links-mp3`
-- [x] Virtualenv creado (Python 3.9.6 disponible; 3.11/3.12 pendiente)
+- [x] Repo remoto en GitHub
+- [x] Virtualenv creado (Python 3.11 disponible vía Homebrew)
 - [x] Paquete instalable: `pip install -e .` deja `yt-links-mp3` disponible en PATH
 
 ### Fase 1 — MVP funcional (4–6h)
@@ -161,7 +139,7 @@ https://www.youtube.com/watch?v=4xDzrJKXOOY   Boiler Room (mezcla 1h)
 - [x] Logging a consola con `loguru`
 - [ ] Salida por defecto: `~/Music/Downloads/<Artist>/<Album>/NN - Title.mp3` *(queda Fase 2: hoy sale plano como `~/Music/Downloads/<id>.mp3`)*
 
-**Criterio de aceptación:** dado un `links.txt` con 10 URLs de videos individuales, produce 10 MP3s válidos en menos de 5 minutos. ⚠️ *Pendiente de validación real: yt-dlp devuelve `403 Forbidden` en la primera corrida de prueba — probable bloqueo regional o de IP. El CLI funciona end-to-end; falta validar con una IP/red que no esté bloqueada por YouTube.*
+**Criterio de aceptación:** dado un `links.txt` con 10 URLs de videos individuales, produce 10 MP3s válidos en menos de 5 minutos.
 
 #### Decisiones de implementación de Fase 1
 - **Descargas en serie por ahora** (en `cli.py`). `downloader.download_all()` ya existe con `ThreadPoolExecutor`, pero `cli.download` itera secuencial para mantener la barra de progreso exacta. Migración a paralelo con callback de progress queda para Fase 3.
@@ -280,9 +258,9 @@ yt-links-mp3 download ~/Music/links.txt.failed  # reintenta esos
 
 ---
 
-## 📊 Estimación total
+## 📊 Estimación restante
 
-~12–17 horas de desarrollo para llegar a Fase 3 funcional. Fase 4 y 5 son nice-to-have.
+~6–10 horas para llegar a Fase 3 funcional (metadatos + robustez). Fase 4 y 5 son nice-to-have.
 
 ---
 
@@ -291,27 +269,17 @@ yt-links-mp3 download ~/Music/links.txt.failed  # reintenta esos
 **Fase:** 1 — MVP funcional ✅ (descarga básica operativa, falta estructura de carpetas y naming por metadatos)
 **Próximo paso:** Fase 2 — Metadatos ricos + estructura de carpetas por artista/álbum
 
-### Lo que funciona hoy (post Fase 0 + Fase 1)
+### Lo que funciona hoy
 - `yt-links-mp3 validate <archivo.txt>` → cuenta links válidos y reporta líneas ignoradas
 - `yt-links-mp3 download <archivo.txt>` → descarga secuencial con barra de progreso, log de fallos, y genera `links.txt.failed` para reintentar
 - `yt-links-mp3 download --dry-run` → preview sin tocar disco
 - `yt-links-mp3 download --concurrency N` → *override disponible pero no aplicado (loop secuencial en cli)*
 - Outputs en `~/Music/Downloads/<video_id>.mp3` (flat, sin estructura de artista/álbum — viene en Fase 2)
+- Calidad por defecto: 320 kbps (CBR, máximo para MP3)
 - Tests: 9/9 pasando
 
 ### Notas operativas
-- **Python 3.9.6 en el sistema.** `pyproject.toml` declara `>=3.9`. yt-dlp deprecó Python 3.9 pero funciona. Pendiente: instalar Python 3.11 vía `brew install python@3.11` para CI matrix y eliminar el warning.
-- **ffmpeg** requerido por yt-dlp para el postprocess a MP3. No verificado en este entorno.
-- **403 Forbidden** observado en pruebas contra YouTube: probable rate-limit / bloqueo regional, no bug del CLI.
+- **Python 3.11 disponible** vía Homebrew (`/opt/homebrew/bin/python3.11`). `pyproject.toml` declara `>=3.9`.
+- **ffmpeg** requerido por yt-dlp para el postprocess a MP3.
 
 ---
-
-## 📝 Notas del refactor
-
-- **Cambio de scope:** ya no se scrapean playlists de YouTube; todo es por archivo de links local.
-- **Cambio de nombre:** `yt-playlist-mp3` → `yt-links-mp3` para reflejar el nuevo modelo.
-- **Cambio de comando:** `download <URL>` → `download <archivo.txt>`.
-- **Nuevo archivo clave:** `links.txt` — archivo editable a mano con una URL por línea.
-- **Nuevo módulo:** `linklist.py` — parser tolerante del archivo.
-- **Nuevo comando:** `validate <archivo.txt>` — preflight sin descargar.
-- **Nuevo feature:** auto-reanudación vía `links.txt.failed` con los links que fallaron.

@@ -43,7 +43,7 @@ Ver [`PLAN.md`](./PLAN.md) para el roadmap completo y el detalle de qué viene e
 | --------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
 | Descarga de video     | [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Mantenido, soporte de URLs individuales, selectores de formato, postprocesado. |
 | Extracción de audio   | `ffmpeg`                                  | Estándar de facto para muxing/conversión.                               |
-| Lenguaje              | Python 3.9+ (probado en 3.9.6; 3.11+ recomendado) | Ecosistema, scripts, CLI limpio. yt-dlp deprecó Python 3.9 pero funciona. |
+| Lenguaje              | Python 3.9+ (probado en 3.11; 3.9 deprecado por yt-dlp) | Ecosistema, scripts, CLI limpio. |
 | CLI                   | [`click`](https://palletsprojects.com/p/click/) | Argumentos tipados, subcomandos, experiencia pro.                     |
 | Config                | `pydantic-settings` + YAML               | Validación + archivo de config legible.                                |
 | Logging               | `loguru`                                  | Salida colorida en consola + archivo rotado.                            |
@@ -74,8 +74,8 @@ El proyecto es Python puro y multiplataforma (macOS, Linux, Windows). Lo único 
 #### macOS / Linux
 
 ```bash
-git clone https://github.com/JonatanAlpirez/youtube-to-mp3-bydevie.git
-cd youtube-to-mp3-bydevie
+git clone https://github.com/JonatanAlpirez/yt-links-mp3.git
+cd yt-links-mp3
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
@@ -87,8 +87,8 @@ pip install pytest
 #### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/JonatanAlpirez/youtube-to-mp3-bydevie.git
-cd youtube-to-mp3-bydevie
+git clone https://github.com/JonatanAlpirez/yt-links-mp3.git
+cd yt-links-mp3
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e .
@@ -100,8 +100,8 @@ pip install pytest
 #### Windows (CMD)
 
 ```cmd
-git clone https://github.com/JonatanAlpirez/youtube-to-mp3-bydevie.git
-cd youtube-to-mp3-bydevie
+git clone https://github.com/JonatanAlpirez/yt-links-mp3.git
+cd yt-links-mp3
 python -m venv .venv
 .venv\Scripts\activate.bat
 pip install -e .
@@ -114,7 +114,7 @@ pip install -e .
 
 ### 3. Requisitos de Python
 
-Probado en Python 3.9.6. Recomendado Python 3.11+ (yt-dlp deprecó 3.9 y emite un warning).
+Probado en Python 3.11. `pyproject.toml` declara `>=3.9` pero yt-dlp deprecó 3.9.
 
 | SO | Instalar Python 3.11+ |
 | --- | --- |
@@ -204,7 +204,7 @@ output_dir: ~/Music/Downloads
 
 # Formato y calidad de audio
 audio_format: mp3
-audio_quality: 192  # kbps
+audio_quality: 320  # kbps — máximo para MP3 (CBR)
 
 # Descarga
 concurrency: 3
