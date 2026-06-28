@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from .metadata import TrackMetadata
+
 # Caracteres prohibidos en nombres de archivo (Windows + Mac + Linux en general)
 _FORBIDDEN = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
@@ -41,7 +43,7 @@ def sanitize_component(name: str) -> str:
 
 
 def sanitize_template(template: str, context: dict[str, str | int]) -> str:
-    """Aplica una plantilla tipo '{artist}/{album}/{track_number:02d} - {title}.{ext}'
+    """Aplica una plantilla tipo '{artist} - {title}.{ext}'
     con sanitización de cada componente.
 
     Soporta formato simple: {key}, {key:0Nd} para zero-padding.
@@ -58,11 +60,14 @@ def sanitize_template(template: str, context: dict[str, str | int]) -> str:
             except (ValueError, TypeError):
                 pass
             return str(raw_value)
-        return str(context.get(token, "_"))
+        # Sanitizar el valor ANTES de meterlo en el template,
+        # para que / no rompa la estructura de subcarpetas
+        return sanitize_component(str(context.get(token, "_")))
 
+    # Sustituir placeholders con valores ya sanitizados
     result = re.sub(r"\{([^}]+)\}", replace, template)
 
-    # Sanitizar cada segmento entre /
+    # Sanitizar los segmentos literales del template (no los placeholders)
     parts = result.split("/")
     return "/".join(sanitize_component(p) for p in parts)
 
@@ -80,3 +85,27 @@ def ensure_unique_path(path: Path) -> Path:
         if not candidate.exists():
             return candidate
         counter += 1
+
+
+def build_filename(template: str, metadata: TrackMetadata, ext: str = "mp3") -> Path:
+    """Construye el filename final a partir de un template y la metadata.
+
+    El template usa {track_number}, {artist}, {title}, {video_id}, {ext}.
+    Aplica sanitización a cada componente.
+
+    Devuelve solo el nombre (no la ruta completa); el caller lo une con output_dir.
+    """
+    context = {
+        "track_number": metadata.track_number,
+        "artist": metadata.artist,
+        "title": metadata.title,
+        "video_id": metadata.video_id,
+        "ext": ext,
+    }
+    # Asegurar que .ext esté incluido si el template no lo trae
+    if "{ext}" not in template:
+        template_with_ext = f"{template}.{ext}"
+    else:
+        template_with_ext = template
+    filename = sanitize_template(template_with_ext, context)
+    return Path(filename)

@@ -1,7 +1,7 @@
 # yt-links-mp3 — example config
 # Copia este archivo a ~/.config/yt-links-mp3/config.yaml o a ./config.yaml
 
-# Carpeta de salida
+# Carpeta de salida (todos los MP3s se guardan acá, sin subcarpetas)
 output_dir: ~/Music/Downloads
 
 # Formato y calidad de audio
@@ -10,16 +10,36 @@ audio_quality: 320  # kbps — máximo para MP3 (CBR)
 
 # Descarga
 concurrency: 3
-skip_existing: true
 force: false
 dry_run: false
 
-# Metadatos
-embed_metadata: true
+# Portada embebida en el MP3 (ID3v2.4 cover art)
 embed_thumbnail: true
 
-# Plantilla de nombre (placeholders: artist, title, album, track_number, ext)
-filename_template: "{artist}/{album}/{track_number:02d} - {title}.{ext}"
+# Template para el nombre del archivo. Placeholders:
+#   {track_number}  {artist}  {title}  {video_id}  {ext}
+# Formato de padding: {track_number:02d} → 01, 02, 03…
+filename_template: "{track_number:02d} - {artist} - {title}.{ext}"
+
+# Regex (case-insensitive) a borrar del título al limpiar.
+# Extensible: agregar/quitar entradas según necesidad.
+cleanup_patterns:
+  - "\(official video\)"
+  - "\(official music video\)"
+  - "\[official video\]"
+  - "\(official\)"
+  - "\[official\]"
+  - "\(lyric(?:s)? video\)"
+  - "\(lyric(?:s)?\)"
+  - "\(lyrics?\)"
+  - "\(hd\)"
+  - "\[hd\]"
+  - "\bhd\b"
+  - "official video"
+  - "official music video"
+  - "music video"
+  - "\blyric(?:s)? video\b"
+  - "\blyrics?\b"
 
 # Archivo de links fallidos (auto-generado cuando algo falla)
 # Útil para reintentar: yt-links-mp3 download links.txt.failed

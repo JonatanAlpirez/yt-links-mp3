@@ -6,6 +6,8 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, Field
 
+from .metadata import DEFAULT_CLEANUP_PATTERNS
+
 
 class Config(BaseModel):
     """Config principal del CLI."""
@@ -17,9 +19,12 @@ class Config(BaseModel):
     skip_existing: bool = True
     force: bool = False
     dry_run: bool = False
-    embed_metadata: bool = True
     embed_thumbnail: bool = True
-    filename_template: str = "{artist}/{album}/{track_number:02d} - {title}.{ext}"
+    # Template para el nombre del archivo. Placeholders:
+    # {track_number}, {artist}, {title}, {video_id}, {ext}
+    filename_template: str = "{track_number:02d} - {artist} - {title}.{ext}"
+    # Patrones regex (case-insensitive) a borrar del título al limpiar
+    cleanup_patterns: list[str] = Field(default_factory=lambda: list(DEFAULT_CLEANUP_PATTERNS))
     failed_filename: str = "links.txt.failed"
 
     @classmethod

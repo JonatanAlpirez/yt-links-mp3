@@ -171,7 +171,7 @@ yt-links-mp3 download ~/Music/links.txt.failed
 ## ⚙️ Configuración (`config.yaml`)
 
 ```yaml
-# Carpeta de salida
+# Carpeta de salida (todos los MP3s se guardan acá, sin subcarpetas)
 output_dir: ~/Music/Downloads
 
 # Formato y calidad de audio
@@ -182,20 +182,58 @@ audio_quality: 320  # kbps — máximo para MP3 (CBR)
 concurrency: 3
 force: false
 dry_run: false
+
+# Portada embebida en el MP3 (ID3v2.4 cover art)
+embed_thumbnail: true
+
+# Template para el nombre del archivo.
+# Placeholders: {track_number} {artist} {title} {video_id} {ext}
+# Formato de padding: {track_number:02d} → 01, 02, 03…
+filename_template: "{track_number:02d} - {artist} - {title}.{ext}"
+
+# Regex (case-insensitive) a borrar del título al limpiar
+cleanup_patterns:
+  - "\(official video\)"
+  - "\(official music video\)"
+  - "\(official\)"
+  - "\(lyric(?:s)? video\)"
+  - "\(lyric(?:s)?\)"
+  - "\(lyrics?\)"
+  - "\(hd\)"
+  - "\bhd\b"
+  - "official video"
+  - "music video"
+  - "\blyrics?\b"
 ```
+
+### Override de metadatos vía `links.txt`
+
+Podés sobreescribir artista/título agregando un hint después de la URL:
+
+```
+https://youtu.be/dQw4w9WgXcQ   Rick Astley/Never Gonna Give You Up
+https://youtu.be/jNQXAC9IVRw   Artist - Custom Title
+```
+
+Formatos de hint aceptados: `Artist/Title` o `Artist - Title`.
 
 ---
 
 ## 📁 Estructura resultante
 
-Por defecto los archivos se guardan en `~/Music/Downloads/` con el nombre `<video_id>.mp3`:
+Por defecto los archivos se guardan en `~/Music/Downloads/` con el patrón `{NN} - {artist} - {title}.mp3`:
 
 ```
 ~/Music/Downloads/
-├── dQw4w9WgXcQ.mp3
-├── jNQXAC9IVRw.mp3
-└── 9bZkp7q19f0.mp3
+├── 01 - Rick Astley - Never Gonna Give You Up.mp3
+├── 02 - PSY - Gangnam Style.mp3
+└── 03 - Luis Fonsi - Despacito.mp3
 ```
+
+- `{NN}` es el número de track, asignado incrementalmente según el orden en `links.txt`.
+- Los títulos se limpian automáticamente: se borra `Official Video`, `HD`, `(Lyric)`, etc.
+- La portada del video se embebe en cada MP3 (ID3v2.4 cover art).
+- Si un archivo con el mismo nombre ya existe, se omite (skip). Usar `--force` para re-descargar.
 
 ---
 
@@ -229,7 +267,7 @@ pytest                              # corre todos los tests
 pytest tests/test_linklist.py -v    # solo el parser de links
 ```
 
-Estado actual: **9/9 tests pasando** (`tests/test_linklist.py` cubre el parser de links).
+Estado actual: **63/63 tests pasando** (`test_linklist.py` parser, `test_metadata.py` limpieza y extracción, `test_paths.py` sanitización y naming).
 
 ---
 

@@ -80,14 +80,19 @@ def download(
         results = []
         from .downloader import download_one
 
-        for entry in result.entries:
-            r = download_one(entry, config)
+        for idx, entry in enumerate(result.entries, start=1):
+            r = download_one(entry, config, track_number=idx)
             results.append(r)
             progress.update(task_id, advance=1)
 
-    success = sum(1 for r in results if r.success)
+    success = sum(1 for r in results if r.success and not r.skipped)
+    skipped = sum(1 for r in results if r.skipped)
     failed = [r for r in results if not r.success]
-    logger.info(f"✅ {success}/{len(results)} exitosos")
+
+    parts = [f"✅ {success} descargados"]
+    if skipped:
+        parts.append(f"⏭️  {skipped} ya existían")
+    logger.info(", ".join(parts))
 
     if failed:
         failed_path = config.output_dir / config.failed_filename
@@ -96,7 +101,7 @@ def download(
         logger.info(f"Reintentá con: yt-links-mp3 download {failed_path}")
         raise click.Abort()
     else:
-        logger.info("🎉 Todos los links descargados OK")
+        logger.info("🎉 Todos los links procesados OK")
 
 
 @main.command()
