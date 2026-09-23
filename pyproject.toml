@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yt-links-mp3"
-version = "0.1.0"
+version = "1.0.0"
 description = "Descargador de música desde YouTube a partir de un archivo de links"
 readme = "README.md"
 requires-python = ">=3.10"

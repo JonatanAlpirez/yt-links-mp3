@@ -5,7 +5,7 @@
 | **ID** | SPEC-001 |
 | **Título** | `config.example.yaml` falla al cargar por uso incorrecto de comillas en strings con regex |
 | **Severidad** | 🔴 Crítica |
-| **Estado** | Draft → Ready for implementation |
+| **Estado** | ✅ Done (implementado en `2f5b961`) |
 | **Archivos afectados** | `config.example.yaml`, `README.md`, `tests/test_config.py` (nuevo) |
 | **Esfuerzo estimado** | 30–45 min |
 | **Riesgo de regresión** | Bajo (cambios solo en documentación + 1 archivo de tests nuevo) |

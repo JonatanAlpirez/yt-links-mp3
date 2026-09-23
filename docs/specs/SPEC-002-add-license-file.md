@@ -5,7 +5,7 @@
 | **ID** | SPEC-002 |
 | **Título** | El repo declara licencia MIT pero no contiene el archivo `LICENSE` |
 | **Severidad** | 🟡 Media (legal/profesional, no funcional) |
-| **Estado** | Draft → Ready for implementation |
+| **Estado** | ✅ Done (implementado en `2b10e9c`) |
 | **Archivos afectados** | `LICENSE` (nuevo) |
 | **Esfuerzo estimado** | 5–10 min |
 | **Riesgo de regresión** | Nulo (archivo nuevo, sin código) |

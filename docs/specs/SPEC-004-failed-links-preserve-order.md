@@ -5,7 +5,7 @@
 | **ID** | SPEC-004 |
 | **Título** | `links.txt.failed` se escribe en orden de completación (no de aparición), perdiendo el orden original del archivo |
 | **Severidad** | 🟢 Baja (UX, no afecta correctness de descargas) |
-| **Estado** | Draft → Ready for implementation |
+| **Estado** | ✅ Done (implementado en `459c1d4`) |
 | **Archivos afectados** | `src/yt_links_mp3/downloader.py`, `tests/test_downloader.py` (nuevos tests) |
 | **Esfuerzo estimado** | 10–15 min |
 | **Riesgo de regresión** | Bajo (solo cambia el orden de salida de `failed.txt`) |

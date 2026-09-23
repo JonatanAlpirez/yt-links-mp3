@@ -5,7 +5,7 @@
 | **ID** | SPEC-003 |
 | **Título** | Tres mejoras al comando `info`: estado descargado en URL, formateo de duración con horas, y concurrencia en archivo |
 | **Severidad** | 🟡 Media (UX, inconsistencia entre comandos y docs) |
-| **Estado** | Draft → Ready for implementation |
+| **Estado** | ✅ Done (implementado en `548f7e5`) |
 | **Archivos afectados** | `src/yt_links_mp3/cli.py`, `tests/test_cli.py` |
 | **Esfuerzo estimado** | 45–60 min |
 | **Riesgo de regresión** | Bajo (solo toca `cli.py` y tests; no toca lógica de descarga) |

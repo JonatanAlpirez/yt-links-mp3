@@ -309,7 +309,9 @@ pytest                              # corre todos los tests
 pytest tests/test_linklist.py -v    # solo el parser de links
 ```
 
-Estado actual: **125/125 tests pasando** (`test_linklist.py` parser YouTube + sitios múltiples, `test_metadata.py` limpieza y extracción, `test_paths.py` sanitización y naming, `test_config.py` carga de YAML, `test_downloader.py` retry y concurrencia, `test_cli.py` comando info y helpers, `test_cache.py` cache persistente).
+Estado actual: **144/144 tests pasando**. Desde v0.1: **+19 tests** = 17 nuevos en `test_cli.py` (info command polish: `info <URL>` muestra estado "ya descargado", `_format_duration` maneja horas con formato `H:MM:SS`, `info <archivo>` concurrente con `ThreadPoolExecutor`) + 2 nuevos en `test_downloader.py` (preservación de orden original en `links.txt.failed`).
+
+Distribución: `test_linklist.py` 17, `test_metadata.py` 36, `test_paths.py` 18, `test_config.py` 5, `test_downloader.py` 20, `test_cli.py` 32, `test_cache.py` 16.
 
 ## 🔧 Makefile
 
