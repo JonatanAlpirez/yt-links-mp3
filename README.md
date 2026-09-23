@@ -394,4 +394,6 @@ Este proyecto es solo para uso personal. Respeta los derechos de autor y los Té
 
 ## 📄 Licencia
 
-MIT
+Ver [`LICENSE`](./LICENSE) para el texto completo.
+
+MIT © 2026 Jonatan Alpirez
