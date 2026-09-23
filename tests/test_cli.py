@@ -181,6 +181,7 @@ def test_info_file_one_link_fails_other_succeeds(tmp_path: Path) -> None:
 
 # ---- Feature B: _format_duration maneja horas ----
 
+
 @pytest.mark.parametrize(
     ("seconds", "expected"),
     [
@@ -210,6 +211,7 @@ def test_format_duration_truncates_float() -> None:
 
 # ---- Feature A: info <URL> muestra estado 'ya descargado' ----
 
+
 def test_info_url_shows_downloaded_when_file_exists(tmp_path: Path) -> None:
     """info <URL> muestra '✓ Ya descargado' cuando _existing_path_for retorna un path."""
     fake_existing = tmp_path / "01 - Artist - Song.mp3"
@@ -228,6 +230,7 @@ def test_info_url_shows_downloaded_when_file_exists(tmp_path: Path) -> None:
 
 def test_info_url_shows_not_downloaded_when_file_missing(tmp_path: Path) -> None:
     """info <URL> muestra '— No descargado' cuando _existing_path_for retorna None."""
+
     def fake_fetch(url: str, **_kwargs: object) -> dict:
         return {"id": "abc12345678", "title": "Song", "uploader": "Artist", "duration": 213}
 
@@ -255,6 +258,7 @@ def test_info_bare_id_shows_downloaded_status(tmp_path: Path) -> None:
 
 
 # ---- Feature C: info <file> concurrente ----
+
 
 def test_info_file_uses_concurrency(tmp_path: Path) -> None:
     """info <archivo> ejecuta fetch en paralelo (no secuencial) con ThreadPoolExecutor."""
