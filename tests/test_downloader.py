@@ -350,3 +350,52 @@ def test_write_failed_links_no_failures(tmp_path: Path) -> None:
     count = write_failed_links(results, str(failed_file))
     assert count == 0
     assert not failed_file.exists()
+
+
+def test_write_failed_links_preserves_original_order(tmp_path: Path) -> None:
+    """Los links fallidos deben escribirse en el orden del archivo original (por line_number)."""
+    from yt_links_mp3.downloader import DownloadResult
+
+    e1 = LinkEntry(video_id="id1", url="https://youtu.be/id1", description=None, line_number=1, raw="id1")
+    e2 = LinkEntry(video_id="id2", url="https://youtu.be/id2", description=None, line_number=2, raw="id2")
+    e3 = LinkEntry(video_id="id3", url="https://youtu.be/id3", description=None, line_number=3, raw="id3")
+
+    # Resultados en orden de completación (shuffled, distinto del original)
+    results = [
+        DownloadResult(entry=e3, success=False, output_path=None, error="err", skipped=False),
+        DownloadResult(entry=e1, success=False, output_path=None, error="err", skipped=False),
+        DownloadResult(entry=e2, success=False, output_path=None, error="err", skipped=False),
+    ]
+
+    output = tmp_path / "failed.txt"
+    write_failed_links(results, str(output))
+
+    content = output.read_text(encoding="utf-8")
+    lines = [line for line in content.splitlines() if not line.startswith("#") and line.strip()]
+
+    assert "id1" in lines[0]
+    assert "id2" in lines[1]
+    assert "id3" in lines[2]
+
+
+def test_write_failed_links_skips_successful(tmp_path: Path) -> None:
+    """Solo los links con success=False aparecen en failed.txt (skipped no influye)."""
+    from yt_links_mp3.downloader import DownloadResult
+
+    e1 = LinkEntry(video_id="id1", url="https://youtu.be/id1", description=None, line_number=1, raw="id1")
+    e2 = LinkEntry(video_id="id2", url="https://youtu.be/id2", description=None, line_number=2, raw="id2")
+    e3 = LinkEntry(video_id="id3", url="https://youtu.be/id3", description=None, line_number=3, raw="id3")
+
+    results = [
+        DownloadResult(entry=e1, success=True, output_path="/x.mp3", error=None, skipped=False),
+        DownloadResult(entry=e2, success=False, output_path=None, error="err", skipped=False),
+        DownloadResult(entry=e3, success=False, output_path=None, error="err", skipped=True),
+    ]
+
+    output = tmp_path / "failed.txt"
+    write_failed_links(results, str(output))
+
+    content = output.read_text(encoding="utf-8")
+    assert "id1" not in content  # success=True → excluded
+    assert "id2" in content  # success=False → included
+    assert "id3" in content  # success=False aunque skipped=True → included

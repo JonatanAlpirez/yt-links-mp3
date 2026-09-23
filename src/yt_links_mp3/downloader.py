@@ -264,6 +264,8 @@ def write_failed_links(results: list[DownloadResult], output_path: str) -> int:
     failed = [r for r in results if not r.success]
     if not failed:
         return 0
+    # Preservar orden original del archivo de entrada (no el orden de completación)
+    failed.sort(key=lambda r: r.entry.line_number)
     lines = ["# Links fallidos - reintentá con: yt-links-mp3 download <este archivo>\n"]
     for r in failed:
         lines.append(f"{r.entry.url}    {r.entry.description or ''}\n")
