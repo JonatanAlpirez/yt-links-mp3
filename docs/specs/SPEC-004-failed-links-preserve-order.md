@@ -1,8 +1,8 @@
-# SPEC-006: Preservar orden original en `links.txt.failed`
+# SPEC-004: Preservar orden original en `links.txt.failed`
 
 | Campo | Valor |
 |---|---|
-| **ID** | SPEC-006 |
+| **ID** | SPEC-004 |
 | **Título** | `links.txt.failed` se escribe en orden de completación (no de aparición), perdiendo el orden original del archivo |
 | **Severidad** | 🟢 Baja (UX, no afecta correctness de descargas) |
 | **Estado** | Draft → Ready for implementation |
