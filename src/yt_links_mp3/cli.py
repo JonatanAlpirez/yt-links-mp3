@@ -242,7 +242,7 @@ def info(ctx: click.Context, target: str) -> None:
         if existing is not None:
             click.echo(f"   ✓ Ya descargado: {existing.name}")
         else:
-            click.echo(f"   — No descargado todavía")
+            click.echo("   — No descargado todavía")
 
         click.echo()
     else:

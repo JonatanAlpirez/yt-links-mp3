@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 from click.testing import CliRunner
 
-from yt_links_mp3.cli import _existing_path_for, _format_duration, _is_url_like, main
+from yt_links_mp3.cli import _format_duration, _is_url_like, main
 
 # ------------------- _is_url_like -------------------
 
@@ -305,5 +305,5 @@ def test_info_file_preserves_order(tmp_path: Path) -> None:
     assert result.exit_code == 0
     # Los títulos Song-0, Song-1, ... deben aparecer en el output en orden
     positions = [result.output.find(f"Song-{i}") for i in range(len(ids))]
-    assert -1 not in positions, f"Algún Song-{{i}} no apareció en output"
+    assert -1 not in positions, "Algún Song-{i} no apareció en output"
     assert positions == sorted(positions), f"Orden incorrecto: {positions}"
