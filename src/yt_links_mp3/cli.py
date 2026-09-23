@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import click
@@ -142,11 +143,22 @@ def _is_url_like(arg: str) -> bool:
 
 
 def _format_duration(seconds: int | float | None) -> str:
-    """Formatea segundos a MM:SS."""
+    """Formatea segundos a M:SS o H:MM:SS según corresponda.
+
+    Ejemplos:
+        213 (3:33)         → '3:33'
+        3599 (59:59)       → '59:59'
+        3600 (1:00:00)     → '1:00:00'
+        3930 (1h 5m 30s)   → '1:05:30'
+        None o 0           → '?'
+    """
     if not seconds:
         return "?"
     s = int(seconds)
-    m, sec = divmod(s, 60)
+    h, rem = divmod(s, 3600)
+    m, sec = divmod(rem, 60)
+    if h > 0:
+        return f"{h}:{m:02d}:{sec:02d}"
     return f"{m}:{sec:02d}"
 
 
@@ -216,6 +228,22 @@ def info(ctx: click.Context, target: str) -> None:
         click.echo(f"   Titulo:   {md.title}")
         click.echo(f"   Duracion: {_format_duration(raw_info.get('duration'))}")
         click.echo(f"   ID:       {raw_info.get('id', '?')}")
+
+        # Detectar si ya está descargado
+        video_id = raw_info.get("id", "?")
+        existing = _existing_path_for(
+            entry_video_id=video_id,
+            metadata_artist=md.artist,
+            metadata_title=md.title,
+            track_number=1,
+            config=config,
+        )
+        click.echo()
+        if existing is not None:
+            click.echo(f"   ✓ Ya descargado: {existing.name}")
+        else:
+            click.echo(f"   — No descargado todavía")
+
         click.echo()
     else:
         # Archivo de links
@@ -235,8 +263,14 @@ def info(ctx: click.Context, target: str) -> None:
             return
 
         cache = build_cache(config)
-        rows: list[tuple[str, str, str, str, str]] = []
-        for idx, entry in enumerate(result.entries, start=1):
+        rows: list[tuple[str, str, str, str, str] | None] = [None] * len(result.entries)
+
+        def fetch_one(idx: int, entry) -> tuple[int, tuple[str, str, str, str, str]]:
+            """Fetch metadata + detect existing file for one entry.
+
+            Devuelve (idx, row) para que el caller preserva el orden de las filas
+            al asignar rows[idx - 1] = row aunque los futures completen desordenados.
+            """
             try:
                 info_dict = fetch_metadata_cached(entry.url, cache=cache)
                 from .metadata import build_metadata
@@ -250,17 +284,29 @@ def info(ctx: click.Context, target: str) -> None:
                 )
                 existing = _existing_path_for(entry.video_id, md.artist, md.title, idx, config)
                 downloaded = "✓" if existing else "—"
-                rows.append(
+                return (
+                    idx,
                     (
                         str(idx),
                         md.artist,
                         md.title,
                         _format_duration(info_dict.get("duration")),
                         downloaded,
-                    )
+                    ),
                 )
             except Exception as e:  # noqa: BLE001
-                rows.append((str(idx), "?", entry.url[:40], "?", f"err: {e}"))
+                return (idx, (str(idx), "?", entry.url[:40], "?", f"err: {e}"))
+
+        with ThreadPoolExecutor(max_workers=config.concurrency) as executor:
+            futures = {
+                executor.submit(fetch_one, idx, entry): idx
+                for idx, entry in enumerate(result.entries, start=1)
+            }
+            for future in as_completed(futures):
+                idx, row = future.result()
+                rows[idx - 1] = row
+
+        rows = [r for r in rows if r is not None]
 
         # Tabla con rich si esta disponible, si no, click.echo simple
         try:
